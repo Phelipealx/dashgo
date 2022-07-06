@@ -5,7 +5,6 @@ interface ProfileProps {
 }
 
 export function Profile({ showProfileData = false }: ProfileProps) {
-  console.log(showProfileData);
   return (
     <Flex align="center">
       {showProfileData && (
