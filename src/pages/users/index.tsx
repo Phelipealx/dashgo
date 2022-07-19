@@ -16,33 +16,22 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { AiOutlineReload } from "react-icons/ai";
 import { RiAddLine } from "react-icons/ri";
-import { useQuery } from "react-query";
+
 import { Header } from "../../components/Header";
 import { Pagination } from "../../components/Pagination";
 import { Sidebar } from "../../components/Sidebar";
+import { useUsers } from "../../services/hooks/useUsers";
 
 export default function UserList() {
-  const { data, isLoading, error } = useQuery(
-    "users",
-    async () => {
-      const response = await fetch("http://localhost:3000/api/users").then(
-        (response) => response.json()
-      );
-      return response.users.map((user) => {
-        return {
-          ...user,
-          createdAt: new Date(user.createdAt).toLocaleDateString("pt-BR", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          }),
-        };
-      });
-    },
-    { staleTime: 5000 }
-  );
+  const [page, setPage] = useState(1);
+  const { data, isLoading, isFetching, error, refetch } = useUsers(page);
+
+  const handleRefetch = () => {
+    refetch();
+  };
 
   const isWideVersion = useBreakpointValue({ base: false, lg: true });
 
@@ -59,19 +48,34 @@ export default function UserList() {
           <Flex mb="8" justify="space-between" align="center">
             <Heading size="lg" fontWeight="normal">
               Usuários
+              {!isLoading && isFetching && (
+                <Spinner size="sm" color="gray.500" ml="4" />
+              )}
             </Heading>
 
-            <Link href="/users/create" passHref>
+            <Box>
               <Button
                 as="a"
                 size="sm"
                 fontSize="sm"
                 colorScheme="pink"
-                leftIcon={<Icon as={RiAddLine} fontSize="20" />}
-              >
-                Criar novo
-              </Button>
-            </Link>
+                leftIcon={<Icon as={AiOutlineReload} fontSize="20" ml="2" />}
+                mr="4"
+                onClick={handleRefetch}
+              ></Button>
+
+              <Link href="/users/create" passHref>
+                <Button
+                  as="a"
+                  size="sm"
+                  fontSize="sm"
+                  colorScheme="pink"
+                  leftIcon={<Icon as={RiAddLine} fontSize="20" />}
+                >
+                  Criar novo
+                </Button>
+              </Link>
+            </Box>
           </Flex>
 
           {isLoading ? (
@@ -96,7 +100,7 @@ export default function UserList() {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {data.map((user) => (
+                  {data.users.map((user) => (
                     <Tr key={user.id}>
                       <Td px={["4", "4", "6"]}>
                         <Checkbox colorScheme="pink" />
@@ -125,7 +129,11 @@ export default function UserList() {
                   ))}
                 </Tbody>
               </Table>
-              <Pagination />
+              <Pagination
+                totalCountOfRegister={data.totalCount}
+                currentPage={page}
+                onPageChange={setPage}
+              />
             </>
           )}
         </Box>
