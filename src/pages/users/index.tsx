@@ -5,6 +5,7 @@ import {
   Flex,
   Heading,
   Icon,
+  Link as ChakaraLink,
   Spinner,
   Table,
   Tbody,
@@ -16,14 +17,16 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AiOutlineReload } from "react-icons/ai";
 import { RiAddLine } from "react-icons/ri";
 
 import { Header } from "../../components/Header";
 import { Pagination } from "../../components/Pagination";
 import { Sidebar } from "../../components/Sidebar";
+import { api } from "../../services/api";
 import { useUsers } from "../../services/hooks/useUsers";
+import { queryClient } from "../../services/queryClient";
 
 export default function UserList() {
   const [page, setPage] = useState(1);
@@ -35,7 +38,19 @@ export default function UserList() {
 
   const isWideVersion = useBreakpointValue({ base: false, lg: true });
 
-  useEffect(() => {});
+  async function handlePrefetchUser(userId: string) {
+    await queryClient.prefetchQuery(
+      ["user", userId],
+      async () => {
+        const response = await api.get(`users/${userId}`);
+
+        return response.data;
+      },
+      {
+        staleTime: 1000 * 60 * 10, // 10 min
+      }
+    );
+  }
 
   return (
     <Box>
@@ -96,7 +111,6 @@ export default function UserList() {
                     </Th>
                     <Th>Usuário</Th>
                     {isWideVersion && <Th>Data de cadastro</Th>}
-                    {/* <Th width="8"></Th> */}
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -107,24 +121,18 @@ export default function UserList() {
                       </Td>
                       <Td>
                         <Box>
-                          <Text fontWeight="bold">{user.name}</Text>
+                          <ChakaraLink
+                            color="purple.400"
+                            onMouseEnter={() => handlePrefetchUser(user.id)}
+                          >
+                            <Text fontWeight="bold">{user.name}</Text>
+                          </ChakaraLink>
                           <Text fontSize="sm" color="gray.300">
                             {user.email}
                           </Text>
                         </Box>
                       </Td>
                       {isWideVersion && <Td>{user.createdAt}</Td>}
-                      {/* <Td>
-                  <Button
-                    as="a"
-                    size="sm"
-                    fontSize="sm"
-                    colorScheme="purple"
-                    leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
-                  >
-                    Editar
-                  </Button>
-                </Td> */}
                     </Tr>
                   ))}
                 </Tbody>
