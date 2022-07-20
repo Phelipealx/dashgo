@@ -16,6 +16,7 @@ import {
   Tr,
   useBreakpointValue,
 } from "@chakra-ui/react";
+import { GetServerSideProps } from "next";
 import Link from "next/link";
 import { useState } from "react";
 import { AiOutlineReload } from "react-icons/ai";
@@ -25,8 +26,13 @@ import { Header } from "../../components/Header";
 import { Pagination } from "../../components/Pagination";
 import { Sidebar } from "../../components/Sidebar";
 import { api } from "../../services/api";
-import { useUsers } from "../../services/hooks/useUsers";
+import { getUsers, User, useUsers } from "../../services/hooks/useUsers";
 import { queryClient } from "../../services/queryClient";
+
+interface UserListProps {
+  users: User[];
+  totalCount: number;
+}
 
 export default function UserList() {
   const [page, setPage] = useState(1);
@@ -132,7 +138,7 @@ export default function UserList() {
                           </Text>
                         </Box>
                       </Td>
-                      {isWideVersion && <Td>{user.createdAt}</Td>}
+                      {isWideVersion && <Td>{user.created_at}</Td>}
                     </Tr>
                   ))}
                 </Tbody>
